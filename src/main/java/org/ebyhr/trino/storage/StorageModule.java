@@ -53,6 +53,9 @@ public class StorageModule
         binder.bind(StorageSplitManager.class).in(Scopes.SINGLETON);
         binder.bind(StorageRecordSetProvider.class).in(Scopes.SINGLETON);
         binder.bind(StoragePageSourceProvider.class).in(Scopes.SINGLETON);
+        binder.bind(StorageConfig.class).in(Scopes.SINGLETON);
+        binder.bind(StorageProperties.class).in(Scopes.SINGLETON);
+
 
         jsonBinder(binder).addDeserializerBinding(Type.class).to(TypeDeserializer.class);
         jsonCodecBinder(binder).bindMapJsonCodec(String.class, listJsonCodec(StorageTable.class));

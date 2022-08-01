@@ -13,6 +13,7 @@
  */
 package org.ebyhr.trino.storage;
 
+import com.google.common.collect.ImmutableList;
 import io.airlift.bootstrap.LifeCycleManager;
 import io.airlift.log.Logger;
 import io.trino.spi.connector.Connector;
@@ -20,8 +21,10 @@ import io.trino.spi.connector.ConnectorMetadata;
 import io.trino.spi.connector.ConnectorPageSourceProvider;
 import io.trino.spi.connector.ConnectorSplitManager;
 import io.trino.spi.connector.ConnectorTransactionHandle;
+import io.trino.spi.session.PropertyMetadata;
 import io.trino.spi.transaction.IsolationLevel;
 
+import java.util.List;
 import javax.inject.Inject;
 
 import static java.util.Objects.requireNonNull;
@@ -36,18 +39,21 @@ public class StorageConnector
     private final StorageMetadata metadata;
     private final StorageSplitManager splitManager;
     private final StoragePageSourceProvider pageSourceProvider;
+    private final StorageProperties storageProperties;
 
     @Inject
     public StorageConnector(
             LifeCycleManager lifeCycleManager,
             StorageMetadata metadata,
             StorageSplitManager splitManager,
-            StoragePageSourceProvider pageSourceProvider)
+            StoragePageSourceProvider pageSourceProvider,
+            StorageProperties storageProperties)
     {
         this.lifeCycleManager = requireNonNull(lifeCycleManager, "lifeCycleManager is null");
         this.metadata = requireNonNull(metadata, "metadata is null");
         this.splitManager = requireNonNull(splitManager, "splitManager is null");
         this.pageSourceProvider = requireNonNull(pageSourceProvider, "pageSourceProvider is null");
+        this.storageProperties = requireNonNull(storageProperties, "StorageProperty is null");
     }
 
     @Override
@@ -66,6 +72,12 @@ public class StorageConnector
     public ConnectorSplitManager getSplitManager()
     {
         return splitManager;
+    }
+
+    @Override
+    public List<PropertyMetadata<?>> getSessionProperties()
+    {
+        return ImmutableList.copyOf(storageProperties.getSessionProperties());
     }
 
     @Override

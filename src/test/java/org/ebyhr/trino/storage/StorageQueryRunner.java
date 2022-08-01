@@ -66,7 +66,9 @@ public final class StorageQueryRunner
         return testSessionBuilder()
                 .setCatalog("storage")
                 .setSchema(TPCH_SCHEMA)
-                .build();
+            .setCatalogSessionProperty("storage","boondusername","victor.hugo@wishtest.com")
+            .setCatalogSessionProperty("storage","boondpassword","victor.hugo@wishtest.com")
+            .build();
     }
 
     public static void main(String[] args)

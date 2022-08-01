@@ -44,6 +44,14 @@ public final class TestStorageConnector
     }
 
     @Test
+    public void testSelectBoond()
+    {
+        assertQuerySucceeds(format("SELECT * FROM storage.raw.\"%s\"","https://"
+            + "fra.wishgroupe.com/ui.boondmanager/api/application/weekendandbankholidays?calendar=&startDate"
+            + "=2022-01-01&endDate=2022-12-31"));
+    }
+
+    @Test
     public void testSelectTsv()
     {
         assertQuery(
