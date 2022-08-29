@@ -16,8 +16,8 @@ package org.ebyhr.trino.storage;
 import com.google.inject.Injector;
 import io.airlift.bootstrap.Bootstrap;
 import io.airlift.json.JsonModule;
-import io.trino.plugin.hive.HiveHdfsModule;
-import io.trino.plugin.hive.authentication.HdfsAuthenticationModule;
+import io.trino.hdfs.HdfsModule;
+import io.trino.hdfs.authentication.HdfsAuthenticationModule;
 import io.trino.plugin.hive.azure.HiveAzureModule;
 import io.trino.plugin.hive.gcs.HiveGcsModule;
 import io.trino.plugin.hive.s3.HiveS3Module;
@@ -31,7 +31,7 @@ import static com.google.common.base.Throwables.throwIfUnchecked;
 import static java.util.Objects.requireNonNull;
 
 public class StorageConnectorFactory
-        implements ConnectorFactory
+    implements ConnectorFactory
 {
     @Override
     public String getName()
@@ -46,18 +46,18 @@ public class StorageConnectorFactory
         try {
             // A plugin is not required to use Guice; it is just very convenient
             Bootstrap app = new Bootstrap(
-                    new JsonModule(),
-                    new StorageModule(catalogName, context.getTypeManager()),
-                    new HiveHdfsModule(),
-                    new HiveS3Module(),
-                    new HiveGcsModule(),
-                    new HiveAzureModule(),
-                    new HdfsAuthenticationModule());
+                new JsonModule(),
+                new StorageModule(catalogName, context.getTypeManager()),
+                new HdfsModule(),
+                new HiveS3Module(),
+                new HiveGcsModule(),
+                new HiveAzureModule(),
+                new HdfsAuthenticationModule());
 
             Injector injector = app
-                    .doNotInitializeLogging()
-                    .setRequiredConfigurationProperties(requiredConfig)
-                    .initialize();
+                .doNotInitializeLogging()
+                .setRequiredConfigurationProperties(requiredConfig)
+                .initialize();
 
             return injector.getInstance(StorageConnector.class);
         }

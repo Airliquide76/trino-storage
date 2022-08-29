@@ -16,11 +16,10 @@ package org.ebyhr.trino.storage;
 
 import com.google.common.collect.ImmutableList;
 import io.trino.spi.session.PropertyMetadata;
-import static io.trino.spi.session.PropertyMetadata.stringProperty;
-
 import java.util.List;
-
 import javax.inject.Inject;
+
+import static io.trino.spi.session.PropertyMetadata.stringProperty;
 
 public class StorageProperties
 {

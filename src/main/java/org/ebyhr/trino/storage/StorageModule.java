@@ -21,7 +21,6 @@ import com.google.inject.Scopes;
 import io.trino.spi.type.Type;
 import io.trino.spi.type.TypeManager;
 import io.trino.spi.type.TypeSignature;
-
 import javax.inject.Inject;
 
 import static io.airlift.json.JsonBinder.jsonBinder;

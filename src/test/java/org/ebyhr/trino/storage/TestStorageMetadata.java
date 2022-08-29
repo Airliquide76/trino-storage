@@ -15,12 +15,12 @@ package org.ebyhr.trino.storage;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
-import io.trino.plugin.hive.HdfsConfig;
-import io.trino.plugin.hive.HdfsConfiguration;
-import io.trino.plugin.hive.HdfsConfigurationInitializer;
-import io.trino.plugin.hive.HdfsEnvironment;
-import io.trino.plugin.hive.HiveHdfsConfiguration;
-import io.trino.plugin.hive.authentication.NoHdfsAuthentication;
+import io.trino.hdfs.DynamicHdfsConfiguration;
+import io.trino.hdfs.HdfsConfig;
+import io.trino.hdfs.HdfsConfiguration;
+import io.trino.hdfs.HdfsConfigurationInitializer;
+import io.trino.hdfs.HdfsEnvironment;
+import io.trino.hdfs.authentication.NoHdfsAuthentication;
 import io.trino.spi.TrinoException;
 import io.trino.spi.connector.ColumnMetadata;
 import io.trino.spi.connector.ConnectorTableMetadata;
@@ -61,7 +61,7 @@ public class TestStorageMetadata
         assertNotNull(metadataUrl, "metadataUrl is null");
 
         HdfsConfig config = new HdfsConfig();
-        HdfsConfiguration configuration = new HiveHdfsConfiguration(new HdfsConfigurationInitializer(config), ImmutableSet.of());
+        HdfsConfiguration configuration = new DynamicHdfsConfiguration(new HdfsConfigurationInitializer(config), ImmutableSet.of());
         HdfsEnvironment hdfsEnvironment = new HdfsEnvironment(configuration, config, new NoHdfsAuthentication());
 
         StorageClient client = new StorageClient(hdfsEnvironment);
@@ -87,8 +87,8 @@ public class TestStorageMetadata
     {
         // known table
         assertEquals(metadata.getColumnHandles(SESSION, numbersTableHandle), Map.of(
-                "one", new StorageColumnHandle(CONNECTOR_ID, "one", createUnboundedVarcharType(), 0),
-                "1", new StorageColumnHandle(CONNECTOR_ID, "1", createUnboundedVarcharType(), 1)));
+            "one", new StorageColumnHandle(CONNECTOR_ID, "one", createUnboundedVarcharType(), 0),
+            "1", new StorageColumnHandle(CONNECTOR_ID, "1", createUnboundedVarcharType(), 1)));
 
         // unknown table
         try {
@@ -112,8 +112,8 @@ public class TestStorageMetadata
         ConnectorTableMetadata tableMetadata = metadata.getTableMetadata(SESSION, numbersTableHandle);
         assertEquals(tableMetadata.getTable().getSchemaName(), "csv");
         assertEquals(tableMetadata.getColumns(), List.of(
-                new ColumnMetadata("one", createUnboundedVarcharType()),
-                new ColumnMetadata("1", createUnboundedVarcharType())));
+            new ColumnMetadata("one", createUnboundedVarcharType()),
+            new ColumnMetadata("1", createUnboundedVarcharType())));
 
         // unknown tables should produce null
         assertNull(metadata.getTableMetadata(SESSION, new StorageTableHandle(CONNECTOR_ID, "unknown", "unknown")));
@@ -139,7 +139,7 @@ public class TestStorageMetadata
     public void getColumnMetadata()
     {
         assertEquals(metadata.getColumnMetadata(SESSION, numbersTableHandle, new StorageColumnHandle(CONNECTOR_ID, "text", createUnboundedVarcharType(), 0)),
-                new ColumnMetadata("text", createUnboundedVarcharType()));
+            new ColumnMetadata("text", createUnboundedVarcharType()));
 
         // example connector assumes that the table handle and column handle are
         // properly formed, so it will return a metadata object for any
@@ -152,11 +152,11 @@ public class TestStorageMetadata
     public void testCreateTable()
     {
         metadata.createTable(
-                SESSION,
-                new ConnectorTableMetadata(
-                        new SchemaTableName("example", "foo"),
-                        List.of(new ColumnMetadata("text", createUnboundedVarcharType()))),
-                false);
+            SESSION,
+            new ConnectorTableMetadata(
+                new SchemaTableName("example", "foo"),
+                List.of(new ColumnMetadata("text", createUnboundedVarcharType()))),
+            false);
     }
 
     @Test(expectedExceptions = TrinoException.class)

@@ -14,30 +14,21 @@
 package org.ebyhr.trino.storage;
 
 import io.airlift.log.Logger;
-import io.trino.plugin.hive.HdfsEnvironment;
-import io.trino.plugin.hive.HdfsEnvironment.HdfsContext;
+import io.trino.hdfs.HdfsContext;
+import io.trino.hdfs.HdfsEnvironment;
 import io.trino.spi.connector.ConnectorSession;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.regex.Pattern;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.Path;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.ebyhr.trino.storage.operator.FilePlugin;
 import org.ebyhr.trino.storage.operator.PluginFactory;
 
 import javax.inject.Inject;
+import javax.net.ssl.HttpsURLConnection;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -62,8 +53,8 @@ public class StorageClient
     public List<String> getSchemaNames()
     {
         return Stream.of(FileType.values())
-                .map(FileType::toString)
-                .collect(Collectors.toList());
+            .map(FileType::toString)
+            .collect(Collectors.toList());
     }
 
     public Set<String> getTableNames(String schema)
@@ -92,31 +83,9 @@ public class StorageClient
     {
         try {
             if (path.startsWith("http://") || path.startsWith("https://")) {
-                HttpGet request = new HttpGet(path.split("\\?")[0]);
-                HttpClient client = HttpClientBuilder.create().build();
-                if (path.contains("ui.boondmanager/api")){
-                    URIBuilder uriBuilder = new URIBuilder(request.getURI());
-                    String arguments = path.split("\\?")[1];
-                    for (int i = 0; i < arguments.split("&").length; i++){
-                        if (arguments.split("&")[i].split(Pattern.quote("=")).length==2){
-                            uriBuilder = uriBuilder.addParameter(arguments.split("&")[i].split(Pattern.quote("="))[0].replace("date","Date"),arguments.split("&")[i].split(
-                                Pattern.quote("="))[1]);
-                        }else{
-                            uriBuilder = uriBuilder.addParameter(arguments.split("&")[i].split(Pattern.quote("="))[0].replace("date","Date"),"");
-                        }
-                    }
-                    URI uri = uriBuilder.build();
-                    request.setURI(uri);
-                    String auth = session.getProperty("boondusername",String.class) + ":"
-                        + session.getProperty("boondpassword",String.class);
-                    String encoding = Base64.getEncoder().encodeToString(auth.getBytes("UTF-8"));
-                    String authHeader = "Basic " + new String(encoding);
-                    request.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
-                }
-
-                HttpResponse response = client.execute(request);
-
-                return response.getEntity().getContent();
+                URL url = new URL(path);
+                HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+                return connection.getInputStream();
             }
             if (path.startsWith("hdfs://") || path.startsWith("s3a://") || path.startsWith("s3://")) {
                 Path hdfsPath = new Path(path);
@@ -128,8 +97,8 @@ public class StorageClient
 
             return URI.create(path).toURL().openStream();
         }
-        catch (IOException | URISyntaxException e) {
-            throw new UncheckedIOException(format("Failed to open stream for %s", path), (IOException) e);
+        catch (IOException e) {
+            throw new UncheckedIOException(format("Failed to open stream for %s", path), e);
         }
     }
 }
