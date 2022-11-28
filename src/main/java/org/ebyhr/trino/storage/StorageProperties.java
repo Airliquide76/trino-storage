@@ -24,8 +24,7 @@ import static io.trino.spi.session.PropertyMetadata.stringProperty;
 public class StorageProperties
 {
     private final List<PropertyMetadata<?>> sessionProperties;
-    private static final String BOONDUSER = "boondusername";
-    private static final String BOONDPASSWORD = "boondpassword";
+    private static final String BOONDJWT = "jwt";
 
     public List<PropertyMetadata<?>> getSessionProperties()
     {
@@ -36,7 +35,6 @@ public class StorageProperties
     public StorageProperties(StorageConfig storageConfig)
     {
         sessionProperties = ImmutableList.of(
-          stringProperty(BOONDUSER, "Boond username used for rest API queries", storageConfig.getboondusername(), false),
-          stringProperty(BOONDPASSWORD, "Boond password for rest API queries", storageConfig.getboondpassword(), true));
+          stringProperty(BOONDJWT, "Boond JWT token for rest API queries", storageConfig.getboondjwt(), true));
     }
 }

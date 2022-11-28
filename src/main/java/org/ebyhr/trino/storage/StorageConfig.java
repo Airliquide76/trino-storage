@@ -18,33 +18,18 @@ import javax.validation.constraints.NotNull;
 
 
 public class StorageConfig {
-  private String boonduser = "";
-  private  String boondpassword = "boondpassword";
-
+  private  String boondjwt = "jwt";
 
   @NotNull
-  public String getboondusername()
+  public String getboondjwt()
   {
-    return boonduser;
+    return boondjwt;
   }
 
-  @Config("storage.boondusername")
-  public StorageConfig setboondusername(String username)
+  @Config("storage.jwt")
+  public StorageConfig setboondjwt(String jwt)
   {
-    this.boonduser = username;
-    return this;
-  }
-
-  @NotNull
-  public String getboondpassword()
-  {
-    return boondpassword;
-  }
-
-  @Config("storage.boondpassword")
-  public StorageConfig setboondpassword(String password)
-  {
-    this.boondpassword = password;
+    this.boondjwt = jwt;
     return this;
   }
 

@@ -17,23 +17,26 @@ import io.airlift.log.Logger;
 import io.trino.hdfs.HdfsContext;
 import io.trino.hdfs.HdfsEnvironment;
 import io.trino.spi.connector.ConnectorSession;
-import org.apache.hadoop.fs.Path;
-import org.ebyhr.trino.storage.operator.FilePlugin;
-import org.ebyhr.trino.storage.operator.PluginFactory;
-
-import javax.inject.Inject;
-import javax.net.ssl.HttpsURLConnection;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.net.URL;
+import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
+import org.apache.hadoop.fs.Path;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.ebyhr.trino.storage.operator.FilePlugin;
+import org.ebyhr.trino.storage.operator.PluginFactory;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -83,9 +86,33 @@ public class StorageClient
     {
         try {
             if (path.startsWith("http://") || path.startsWith("https://")) {
-                URL url = new URL(path);
-                HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-                return connection.getInputStream();
+
+                HttpGet request = new HttpGet(path.split("\\?")[0]);
+                HttpClient client = HttpClientBuilder.create().build();
+                if (path.contains("ui.boondmanager/api")){
+                    URIBuilder uriBuilder = new URIBuilder(request.getURI());
+                    String arguments = path.split("\\?")[1];
+                    for (int i = 0; i < arguments.split("&").length; i++){
+                        if (arguments.split("&")[i].split(Pattern.quote("=")).length==2){
+                            uriBuilder = uriBuilder.addParameter(arguments.split("&")[i].split(Pattern.quote("="))[0].replace("date","Date"),arguments.split("&")[i].split(
+                                Pattern.quote("="))[1]);
+                        }else{
+                            uriBuilder = uriBuilder.addParameter(arguments.split("&")[i].split(Pattern.quote("="))[0].replace("date","Date"),"");
+                        }
+                    }
+                    URI uri = uriBuilder.build();
+                    request.setURI(uri);
+                    if (!session.getProperty("jwt", String.class).isEmpty()){
+                        String jwt = session.getProperty("jwt",String.class);
+                        request.setHeader("X-Jwt-Internal-Boondmanager", jwt);
+                    }
+                }
+                HttpResponse response = client.execute(request);
+                if (response.getStatusLine().getStatusCode() != 200){
+                    throw new IOException(response.getStatusLine().getReasonPhrase());
+                }
+
+                return response.getEntity().getContent();
             }
             if (path.startsWith("hdfs://") || path.startsWith("s3a://") || path.startsWith("s3://")) {
                 Path hdfsPath = new Path(path);
@@ -97,8 +124,8 @@ public class StorageClient
 
             return URI.create(path).toURL().openStream();
         }
-        catch (IOException e) {
-            throw new UncheckedIOException(format("Failed to open stream for %s", path), e);
+        catch (IOException | URISyntaxException e) {
+            throw new UncheckedIOException(format("Failed to open stream for %s", path), (IOException) e);
         }
     }
 }
